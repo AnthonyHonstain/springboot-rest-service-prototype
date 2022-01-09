@@ -39,22 +39,26 @@ class AnthonyAwsSQSConfiguration {
         factory.setAutoStartup(true)
         factory.setMaxNumberOfMessages(10) // Note - you can't set this beyond 10, it will throw at startup in a shitty way.
         factory.setTaskExecutor(createDefaultTaskExecutor())
+
+        // I experimented with both the SimpleAsyncTaskExecutor and a ThreadPoolTaskExecutor, the
+        // Async task executor didn't seem to have any benefit, despite marking the listener
+        // with the @Async annotation I never go the expected behavior.
         //factory.setTaskExecutor(simpleAsyncTaskExecutor())
         return factory
     }
 
-    fun simpleAsyncTaskExecutor(): SimpleAsyncTaskExecutor {
-        val simpleAsyncTaskExecutor = SimpleAsyncTaskExecutor()
-        simpleAsyncTaskExecutor.concurrencyLimit = 50
-        return simpleAsyncTaskExecutor
-    }
+    //fun simpleAsyncTaskExecutor(): SimpleAsyncTaskExecutor {
+    //    val simpleAsyncTaskExecutor = SimpleAsyncTaskExecutor()
+    //    simpleAsyncTaskExecutor.concurrencyLimit = 50
+    //    return simpleAsyncTaskExecutor
+    //}
 
     fun createDefaultTaskExecutor(): AsyncTaskExecutor {
         val threadPoolTaskExecutor = ThreadPoolTaskExecutor()
-        threadPoolTaskExecutor.setThreadNamePrefix("SQSExecutor - ")
-        threadPoolTaskExecutor.corePoolSize = 10
-        threadPoolTaskExecutor.maxPoolSize = 10
-        threadPoolTaskExecutor.setQueueCapacity(200)
+        threadPoolTaskExecutor.setThreadNamePrefix("Anthony-SQSExecutor - ")
+        threadPoolTaskExecutor.corePoolSize = 2
+        threadPoolTaskExecutor.maxPoolSize = 2
+        //threadPoolTaskExecutor.setQueueCapacity(200)
         threadPoolTaskExecutor.afterPropertiesSet()
         return threadPoolTaskExecutor
     }
@@ -62,7 +66,7 @@ class AnthonyAwsSQSConfiguration {
     @Bean
     fun anthonyMessageListenerExecutor(): ThreadPoolTaskExecutor {
         val executor = ThreadPoolTaskExecutor()
-        executor.maxPoolSize = 100
+        executor.maxPoolSize = 20
         executor.setQueueCapacity(0)
         executor.setThreadNamePrefix("Anthony_Listener - ")
         executor.setRejectedExecutionHandler(BlockingSubmissionPolicy(3000))
@@ -73,6 +77,7 @@ class AnthonyAwsSQSConfiguration {
     class BlockingSubmissionPolicy(val timeout: Long) : RejectedExecutionHandler {
 
         override fun rejectedExecution(p0: Runnable, p1: ThreadPoolExecutor) {
+            println("rejectedExecution")
             try {
                 val queue: BlockingQueue<Runnable> = p1.queue
                 if (!queue.offer(p0, timeout, TimeUnit.MILLISECONDS)) {

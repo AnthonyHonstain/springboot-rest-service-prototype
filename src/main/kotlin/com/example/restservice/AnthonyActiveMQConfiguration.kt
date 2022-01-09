@@ -23,9 +23,4 @@ class AnthonyActiveMQConfiguration {
         jmsTemplate.connectionFactory = connectionFactory()
         return jmsTemplate
     }
-
-    fun testFoo(): Int {
-        val foo = 1 / 0
-        return foo
-    }
 }

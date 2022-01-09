@@ -20,26 +20,26 @@ class SimpleSQSListener {
     @Autowired
     val jmsTemplate: JmsTemplate? = null
 
-    //@SqsListener(value = ["anthony-queue"], deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
-    ////@Async
-    ////@SqsListener(value = ["anthony-queue"], deletionPolicy = SqsMessageDeletionPolicy.NEVER)
+    ////@SqsListener(value = ["anthony-queue"], deletionPolicy = SqsMessageDeletionPolicy.ON_SUCCESS)
+    //@Async
+    //@SqsListener(value = ["anthony-queue"], deletionPolicy = SqsMessageDeletionPolicy.NEVER)
     //fun processmessage(
     //        @Header("MessageId") messageId: String,
     //        message: String,
-    //        //acknowledgment: Acknowledgment,
+    //        acknowledgment: Acknowledgment,
     //) {
     //
     //    val date = Date()
     //    val format = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
     //    val displayTime: String = format.format(date)
-    //    //Thread.sleep(5000)
+    //    Thread.sleep(5000)
     //
     //    println("$displayTime SQS consumer MessageID:$messageId '$message'")
     //
     //    //jmsTemplate?.convertAndSend("anthony-test", message)
     //
     //    // Manually Delete - use this with the SqsMessageDeletionPolicy.NEVER in the annotation
-    //    //acknowledgment.acknowledge().get()
+    //    acknowledgment.acknowledge().get()
     //}
 
     @Autowired
@@ -57,19 +57,19 @@ class SimpleSQSListener {
                 val date = Date()
                 val format = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
                 val displayTime: String = format.format(date)
-                //Thread.sleep(5000)
+                Thread.sleep(1000)
 
                 println("$displayTime SQS consumer MessageID:$messageId '$message'")
+                jmsTemplate?.convertAndSend("anthony-test", message)
 
-                acknowledgment.acknowledge()
+                if (message.endsWith("0")) {
+                    // don't acknowledge
+                } else {
+                    acknowledgment.acknowledge()
+                }
             } catch (e: Exception) {
 
             }
         }
-
-        //jmsTemplate?.convertAndSend("anthony-test", message)
-
-        // Manually Delete - use this with the SqsMessageDeletionPolicy.NEVER in the annotation
-        //acknowledgment.acknowledge().get()
     }
 }
